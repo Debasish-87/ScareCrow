@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Crop Prediction</title>
+    <title>Crop Disease Analyzer</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -11,126 +11,296 @@
             justify-content: center;
             align-items: center;
             height: 100vh;
-            flex-direction: column;
-            background-color: #f4f4f4;
+            background-color: #F8F5F5;
+            position: relative;
         }
         .container {
-            display: flex;
-            justify-content: space-between;
-            width: 80%;
-            max-width: 800px;
-            background: white;
+            width: 500px;
+            background: #EEF6F8;
             padding: 20px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
             border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
         }
-        .input-section {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            width: 50%;
-        }
-        input {
-            padding: 8px;
-            border: 1px solid #ccc;
+        .upload-box {
+            border: 2px dashed #ccc;
+            padding: 20px;
+            margin-bottom: 15px;
+            cursor: pointer;
             border-radius: 5px;
-            width: 100%;
         }
-        .submit-btn {
-            margin-top: 15px;
+        .upload-box p {
+            margin: 10px 0;
+            color: #777;
+        }
+        .upload-box.dragover {
+            border-color: #007bff;
+            background: #e3f2fd;
+        }
+        .browse-btn {
+            display: inline-block;
+            padding: 12px 20px;
+            background: linear-gradient(90deg,rgb(146, 194, 220),rgb(147, 210, 229));
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            color: white;
+            transition: 0.3s;
+        }
+
+        .browse-btn:hover {
+            background: linear-gradient(90deg,rgb(161, 211, 215),rgb(158, 205, 221));
+            transform: scale(1.05);
+        }
+        
+        .upload-box input {
+            display: none;
+        }
+        .results {
+            display: none;
+            margin-top: 20px;
+            text-align: left;
+        }
+        .results p {
+            font-size: 16px;
+            margin: 5px 0;
+        }
+        .results strong {
+            color: #333;
+        }
+
+
+        .clickable-div {
+            width: 100px;
+            height: 35px;
+            background-color: #007bff;
+            color: white;
+            position: absolute;
+            right: 154px;
+            bottom: 25px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 14px;
+            border-radius: 5px;
+            cursor: pointer;
+            box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.2);
+            transition: 0.3s;
+        }
+        .clickable-div:hover {
+            background-color: #0056b3;
+            transform: scale(1.05);
+        }
+
+        /* Chatbot Styles */
+        .chatbot-container {
+            width: 300px;
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            position: absolute;
+            right: 50px;
+            top: 50%;
+            transform: translateY(-50%);
+            text-align: left;
+            display: none;
+        }
+        .chatbot-header {
+            background:rgb(140, 160, 180);
+            color: white;
             padding: 10px;
-            background: #007bff;
+            border-radius: 5px 5px 0 0;
+            text-align: center;
+        }
+        .chatbot-messages {
+            height: 200px;
+            overflow-y: auto;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            background: #rgb(140, 160, 180);
+        }
+        .chatbot-input {
+            width: calc(100% - 20px);
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .chatbot-btn {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            background:rgb(140, 160, 180);
             color: white;
             border: none;
             border-radius: 5px;
             cursor: pointer;
         }
-        .output-section {
-            width: 50%;
-            text-align: center;
-        }
-        .output-box {
-            margin-top: 20px;
-            padding: 10px;
-            background: #28a745;
+        /* Chatbot Toggle Button */
+        .chatbot-toggle-btn {
+            position: absolute;
+            right: 50px;
+            bottom: 20px;
+            padding: 12px 20px;
+            background: linear-gradient(90deg, #4CAF50, #66BB6A);
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
             color: white;
-            border-radius: 5px;
-            display: none; /* Initially hidden */
+            transition: 0.3s;
+        }
+
+        .chatbot-toggle-btn:hover {
+            background: linear-gradient(90deg, #43A047, #57C265);
+            transform: scale(1.05);
         }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <div class="input-section">
-            <input type="text" id="input1" placeholder="Nitrogen (N)">
-            <input type="text" id="input2" placeholder="Phosphorus (P)">
-            <input type="text" id="input3" placeholder="Potassium (K)">
-            <input type="text" id="input4" placeholder="Temperature">
-            <input type="text" id="input5" placeholder="Humidity">
-            <input type="text" id="input6" placeholder="pH Level">
-            <input type="text" id="input7" placeholder="Rainfall">
-            <button class="submit-btn" onclick="submitData()">Predict Crop</button>
+        <h2>Crop Disease Analyzer</h2>
+        
+        <div class="upload-box" id="drop-area">
+            <p>Drag and drop your image here or click to browse</p>
+            <label class="browse-btn">
+                Choose File
+                <input type="file" id="file-input" accept="image/*">
+            </label>
         </div>
-        <div class="output-section">
-            <div id="output" class="output-box"></div>
+        
+        <div class="results" id="results">
+            <img id="preview" src="" alt="Uploaded Image" width="100%">
+            <p><strong>Crop:</strong> <span id="crop-name">-</span></p>
+            <p><strong>Disease:</strong> <span id="disease-name">-</span></p>
+            <button onclick="resetImage()" class="chatbot-btn">Reset</button>
         </div>
     </div>
 
+    <div class="clickable-div" onclick="window.location.href='index2.html'">
+        Click Me
+    </div>
+
+    <!-- Chatbot Toggle Button -->
+    <button class="chatbot-toggle-btn" onclick="toggleChatbot()">Chat</button>
+
+    <!-- Chatbot Container -->
+    <div class="chatbot-container" id="chatbot">
+        <div class="chatbot-header">Chatbot</div>
+        <div class="chatbot-messages" id="chatbot-messages"></div>
+        <input type="text" id="chatbot-input" class="chatbot-input" placeholder="Type a message...">
+        <button class="chatbot-btn" onclick="sendMessage()">Send</button>
+    </div>
+
     <script>
-        function getCSRFToken() {
-            let cookieValue = null;
-            let cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                let cookie = cookies[i].trim();
-                if (cookie.startsWith("csrftoken=")) {
-                    cookieValue = cookie.substring("csrftoken=".length, cookie.length);
-                    break;
-                }
+        const dropArea = document.getElementById("drop-area");
+        const fileInput = document.getElementById("file-input");
+        const results = document.getElementById("results");
+        const preview = document.getElementById("preview");
+        const cropName = document.getElementById("crop-name");
+        const diseaseName = document.getElementById("disease-name");
+
+        ["dragenter", "dragover", "dragleave", "drop"].forEach(event => {
+            dropArea.addEventListener(event, e => e.preventDefault());
+        });
+
+        dropArea.addEventListener("dragover", () => dropArea.classList.add("dragover"));
+        dropArea.addEventListener("dragleave", () => dropArea.classList.remove("dragover"));
+
+        dropArea.addEventListener("drop", (e) => {
+            dropArea.classList.remove("dragover");
+            handleFile(e.dataTransfer.files[0]);
+        });
+
+        fileInput.addEventListener("change", (e) => handleFile(e.target.files[0]));
+
+        function handleFile(file) {
+            if (file && file.type.startsWith("image/")) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    preview.src = e.target.result;
+                    results.style.display = "block";
+                };
+                reader.readAsDataURL(file);
+
+                // Send image for prediction
+                analyzeImage(file);
+            } else {
+                alert("Please upload a valid image file.");
             }
-            return cookieValue;
         }
 
-        function submitData() {
-            let values = {
-                N: document.getElementById("input1").value,
-                P: document.getElementById("input2").value,
-                K: document.getElementById("input3").value,
-                temperature: document.getElementById("input4").value,
-                humidity: document.getElementById("input5").value,
-                ph: document.getElementById("input6").value,
-                rainfall: document.getElementById("input7").value
-            };
+        async function analyzeImage(file) {
+            const formData = new FormData();
+            formData.append("image", file);
 
-            fetch("/predict_crop/", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRFToken": getCSRFToken()  // CSRF token for security
-                },
-                body: JSON.stringify(values)
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log("Response from backend:", data); // Debugging line
-                
-                if (data.result) {
-                    document.getElementById("output").innerText = "Predicted Crop: " + data.result;
-                    document.getElementById("output").style.backgroundColor = "#28a745"; // Green for success
+            try {
+                const response = await fetch("http://127.0.0.1:8000/image_predict_crop/", {
+                    method: "POST",
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    alert("Error: " + data.error);
                 } else {
-                    document.getElementById("output").innerText = "Error: " + data.error;
-                    document.getElementById("output").style.backgroundColor = "red"; // Red for error
+                    // Update UI with detected Crop and Disease
+                    cropName.innerText = data.crop || "Unknown Crop";
+                    diseaseName.innerText = data.disease || "No Disease Detected";
                 }
-                document.getElementById("output").style.display = "block"; // Show output
-            })
-            .catch(error => {
-                console.error("Error:", error);
-                document.getElementById("output").innerText = "Error fetching data!";
-                document.getElementById("output").style.display = "block";
-                document.getElementById("output").style.backgroundColor = "red";
-            });
+            } catch (error) {
+                console.error("Error analyzing image:", error);
+                alert("Failed to analyze the image. Please try again.");
+            }
+        }
+
+        function resetImage() {
+            preview.src = "";
+            results.style.display = "none";
+            fileInput.value = "";
+            cropName.innerText = "-";
+            diseaseName.innerText = "-";
+        }
+
+        function toggleChatbot() {
+            const chatbot = document.getElementById("chatbot");
+            chatbot.style.display = chatbot.style.display === "none" || chatbot.style.display === "" ? "block" : "none";
+        }
+
+        function sendMessage() {
+            const inputField = document.getElementById("chatbot-input");
+            const messageContainer = document.getElementById("chatbot-messages");
+            const userMessage = inputField.value.trim();
+
+            if (userMessage === "") return;
+
+            messageContainer.innerHTML += `<p><strong>You:</strong> ${userMessage}</p>`;
+            let botResponse = "I'm just a simple chatbot. How can I help?";
+
+            if (userMessage.toLowerCase().includes("hello")) {
+                botResponse = "Hello! How can I assist you today?";
+            } else if (userMessage.toLowerCase().includes("disease")) {
+                botResponse = "I can help you analyze crop diseases. Please upload an image!";
+            } else {
+                botResponse = "I'm not sure, but I'm learning every day!";
+            }
+
+            setTimeout(() => {
+                messageContainer.innerHTML += `<p><strong>Bot:</strong> ${botResponse}</p>`;
+                messageContainer.scrollTop = messageContainer.scrollHeight;
+            }, 500);
+
+            inputField.value = "";
         }
     </script>
 
 </body>
+
 </html>

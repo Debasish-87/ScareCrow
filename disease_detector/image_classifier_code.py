@@ -1,6 +1,17 @@
 import joblib
 import numpy as np
 import cv2
+import os
+
+# Get the correct path for model.joblib
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))  # Get the current directory
+model_path = os.path.join(BASE_DIR, "model.joblib")  # Full path to model
+
+print("Model path:", model_path)
+
+
+# Load the model
+model = joblib.load(model_path)
 
 # Load your trained model
 model = joblib.load('model.joblib')
@@ -41,3 +52,4 @@ def predict_disease(image_file):
     disease_name = disease_dict.get(disease_class, "Unknown")
     print(f"Predicted Disease: {disease_name}")
     return disease_name
+
